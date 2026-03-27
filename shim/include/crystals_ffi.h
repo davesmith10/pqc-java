@@ -158,6 +158,30 @@ int crystals_ffi_oqs_kem_decaps(const char *alg_name,
                                   const uint8_t *ct,     size_t ct_len,
                                   uint8_t       *ss_out, size_t ss_len);
 
+/* ── OQS signatures (alg_name: "ML-DSA-44" | "ML-DSA-65" | "ML-DSA-87" |
+                                "Falcon-512" | "Falcon-1024") ── */
+size_t crystals_ffi_oqs_sig_pk_bytes(const char *alg_name);
+size_t crystals_ffi_oqs_sig_sk_bytes(const char *alg_name);
+size_t crystals_ffi_oqs_sig_bytes(const char *alg_name);    /* max sig size */
+
+int crystals_ffi_oqs_sig_keygen(const char *alg_name,
+                                  uint8_t *pk_out, size_t pk_len,
+                                  uint8_t *sk_out, size_t sk_len);
+
+/* actual_sig_len is set to the real signature length (≤ sig_max).
+   For ML-DSA this equals sig_max; for Falcon it may be smaller. */
+int crystals_ffi_oqs_sig_sign(const char *alg_name,
+                               const uint8_t *sk,       size_t sk_len,
+                               const uint8_t *msg,      size_t msg_len,
+                               uint8_t       *sig_out,  size_t sig_max,
+                               size_t        *actual_sig_len);
+
+/* sig_len must be the ACTUAL signature length returned by sign. */
+int crystals_ffi_oqs_sig_verify(const char *alg_name,
+                                 const uint8_t *pk,  size_t pk_len,
+                                 const uint8_t *msg, size_t msg_len,
+                                 const uint8_t *sig, size_t sig_len);
+
 #ifdef __cplusplus
 }
 #endif

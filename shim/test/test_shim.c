@@ -297,6 +297,43 @@ static int test_oqs_kem_roundtrips(void) {
     return 0;
 }
 
+static int test_oqs_sig_roundtrip(const char *alg,
+                                   size_t pk_len, size_t sk_len, size_t sig_max) {
+    const uint8_t msg[]     = "hello post-quantum world";
+    const uint8_t bad_msg[] = "hello post-quantum WORLD";
+    size_t msg_len = sizeof(msg) - 1;
+
+    uint8_t *pk  = malloc(pk_len);
+    uint8_t *sk  = malloc(sk_len);
+    uint8_t *sig = malloc(sig_max);
+    size_t   actual_sig_len = 0;
+
+    assert(crystals_ffi_oqs_sig_pk_bytes(alg) == pk_len);
+    assert(crystals_ffi_oqs_sig_sk_bytes(alg) == sk_len);
+    assert(crystals_ffi_oqs_sig_bytes(alg)    == sig_max);
+
+    assert(crystals_ffi_oqs_sig_keygen(alg, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_oqs_sig_sign(alg, sk, sk_len, msg, msg_len,
+                                      sig, sig_max, &actual_sig_len) == CRYSTALS_FFI_OK);
+    assert(actual_sig_len > 0 && actual_sig_len <= sig_max);
+
+    assert(crystals_ffi_oqs_sig_verify(alg, pk, pk_len, msg, msg_len,
+                                        sig, actual_sig_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_oqs_sig_verify(alg, pk, pk_len, bad_msg, msg_len,
+                                        sig, actual_sig_len) == CRYSTALS_FFI_ECRYPTO);
+    free(pk); free(sk); free(sig);
+    return 0;
+}
+
+static int test_oqs_sig_roundtrips(void) {
+    assert(test_oqs_sig_roundtrip("ML-DSA-44",    1312, 2560, 2420) == 0);
+    assert(test_oqs_sig_roundtrip("ML-DSA-65",    1952, 4032, 3309) == 0);
+    assert(test_oqs_sig_roundtrip("ML-DSA-87",    2592, 4896, 4627) == 0);
+    assert(test_oqs_sig_roundtrip("Falcon-512",    897, 1281,  752) == 0);
+    assert(test_oqs_sig_roundtrip("Falcon-1024",  1793, 2305, 1462) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
@@ -309,5 +346,6 @@ int main(void) {
     RUN(mceliece_roundtrip);
     RUN(slhdsa_roundtrips);
     RUN(oqs_kem_roundtrips);
+    RUN(oqs_sig_roundtrips);
     return tests_failed;
 }

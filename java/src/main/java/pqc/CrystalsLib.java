@@ -147,5 +147,21 @@ final class CrystalsLib {
     static final MethodHandle OQS_KEM_DECAPS = mh("crystals_ffi_oqs_kem_decaps",
         FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
 
+    // ── OQS signatures (ML-DSA + Falcon) ─────────────────────────────────────────
+    static final MethodHandle OQS_SIG_PK_BYTES = mh("crystals_ffi_oqs_sig_pk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_SIG_SK_BYTES = mh("crystals_ffi_oqs_sig_sk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_SIG_BYTES = mh("crystals_ffi_oqs_sig_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_SIG_KEYGEN = mh("crystals_ffi_oqs_sig_keygen",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG));
+    // sign: alg, sk, sk_len, msg, msg_len, sig_out, sig_max, actual_sig_len*
+    static final MethodHandle OQS_SIG_SIGN = mh("crystals_ffi_oqs_sig_sign",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG, ADDR));
+    // verify: alg, pk, pk_len, msg, msg_len, sig, sig_len
+    static final MethodHandle OQS_SIG_VERIFY = mh("crystals_ffi_oqs_sig_verify",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+
     private CrystalsLib() {}
 }
