@@ -117,5 +117,19 @@ final class CrystalsLib {
     static final MethodHandle MCELIECE_DECAPS = mh("crystals_ffi_mceliece_decaps",
         FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
 
+    // ── SLH-DSA signatures ────────────────────────────────────────────────────────
+    static final MethodHandle SLHDSA_PK_BYTES = mh("crystals_ffi_slhdsa_pk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle SLHDSA_SK_BYTES = mh("crystals_ffi_slhdsa_sk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle SLHDSA_SIG_BYTES = mh("crystals_ffi_slhdsa_sig_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle SLHDSA_KEYGEN = mh("crystals_ffi_slhdsa_keygen",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle SLHDSA_SIGN = mh("crystals_ffi_slhdsa_sign",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle SLHDSA_VERIFY = mh("crystals_ffi_slhdsa_verify",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+
     private CrystalsLib() {}
 }

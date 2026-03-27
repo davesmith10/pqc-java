@@ -228,6 +228,40 @@ static int test_mceliece_roundtrip(void) {
     return 0;
 }
 
+static int test_slhdsa_roundtrip(const char *alg,
+                                  size_t pk_len, size_t sk_len, size_t sig_len) {
+    const uint8_t msg[]     = "hello post-quantum world";
+    const uint8_t bad_msg[] = "hello post-quantum WORLD";
+    size_t msg_len = sizeof(msg) - 1;
+
+    uint8_t *pk  = malloc(pk_len);
+    uint8_t *sk  = malloc(sk_len);
+    uint8_t *sig = malloc(sig_len);
+
+    assert(crystals_ffi_slhdsa_pk_bytes(alg) == pk_len);
+    assert(crystals_ffi_slhdsa_sk_bytes(alg) == sk_len);
+    assert(crystals_ffi_slhdsa_sig_bytes(alg) == sig_len);
+
+    assert(crystals_ffi_slhdsa_keygen(alg, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_slhdsa_sign(alg, sk, sk_len, msg, msg_len,
+                                     sig, sig_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_slhdsa_verify(alg, pk, pk_len, msg, msg_len,
+                                       sig, sig_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_slhdsa_verify(alg, pk, pk_len, bad_msg, msg_len,
+                                       sig, sig_len) == CRYSTALS_FFI_ECRYPTO);
+    free(pk); free(sk); free(sig);
+    return 0;
+}
+
+static int test_slhdsa_roundtrips(void) {
+    assert(test_slhdsa_roundtrip("SLH-DSA-SHA2-128f",   32,  64, 17088) == 0);
+    assert(test_slhdsa_roundtrip("SLH-DSA-SHA2-192f",   48,  96, 35664) == 0);
+    assert(test_slhdsa_roundtrip("SLH-DSA-SHAKE-192f",  48,  96, 35664) == 0);
+    assert(test_slhdsa_roundtrip("SLH-DSA-SHA2-256f",   64, 128, 49856) == 0);
+    assert(test_slhdsa_roundtrip("SLH-DSA-SHAKE-256f",  64, 128, 49856) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
@@ -238,5 +272,6 @@ int main(void) {
     RUN(ec_sig_roundtrips);
     RUN(mceliece_sizes);
     RUN(mceliece_roundtrip);
+    RUN(slhdsa_roundtrips);
     return tests_failed;
 }

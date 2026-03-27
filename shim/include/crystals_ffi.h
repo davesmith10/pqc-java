@@ -115,6 +115,27 @@ int crystals_ffi_mceliece_decaps(const char *param_set,
                                   const uint8_t *ct,     size_t ct_len,
                                   uint8_t       *ss_out, size_t ss_len);
 
+/* ── SLH-DSA signatures (alg_name: "SLH-DSA-SHA2-128f" | "SLH-DSA-SHA2-192f" |
+                                    "SLH-DSA-SHAKE-192f" | "SLH-DSA-SHA2-256f" |
+                                    "SLH-DSA-SHAKE-256f") ── */
+size_t crystals_ffi_slhdsa_pk_bytes(const char *alg_name);
+size_t crystals_ffi_slhdsa_sk_bytes(const char *alg_name);
+size_t crystals_ffi_slhdsa_sig_bytes(const char *alg_name);
+
+int crystals_ffi_slhdsa_keygen(const char *alg_name,
+                                uint8_t *pk_out, size_t pk_len,
+                                uint8_t *sk_out, size_t sk_len);
+
+int crystals_ffi_slhdsa_sign(const char *alg_name,
+                              const uint8_t *sk,      size_t sk_len,
+                              const uint8_t *msg,     size_t msg_len,
+                              uint8_t       *sig_out, size_t sig_len);
+
+int crystals_ffi_slhdsa_verify(const char *alg_name,
+                                const uint8_t *pk,  size_t pk_len,
+                                const uint8_t *msg, size_t msg_len,
+                                const uint8_t *sig, size_t sig_len);
+
 #ifdef __cplusplus
 }
 #endif

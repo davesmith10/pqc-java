@@ -78,6 +78,16 @@ static McElieceSizes mceliece_sz(const char *ps) {
     return {0,0,0};
 }
 
+struct SlhDsaSizes { size_t pk, sk; };
+static SlhDsaSizes slhdsa_sz(const char *n) {
+    if (!n) return {0,0};
+    std::string s(n);
+    if (s=="SLH-DSA-SHA2-128f"  || s=="SLH-DSA-SHAKE-128f")  return {32, 64};
+    if (s=="SLH-DSA-SHA2-192f"  || s=="SLH-DSA-SHAKE-192f")  return {48, 96};
+    if (s=="SLH-DSA-SHA2-256f"  || s=="SLH-DSA-SHAKE-256f")  return {64,128};
+    return {0,0};
+}
+
 extern "C" {
 
 size_t crystals_ffi_kyber_pk_bytes(int level) {
@@ -441,6 +451,77 @@ int crystals_ffi_mceliece_decaps(const char *param_set,
         mceliece_kem::decaps(std::string(param_set), sk_vec, ct_vec, ss);
         std::memcpy(ss_out, ss.data(), 32);
         return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+size_t crystals_ffi_slhdsa_pk_bytes(const char *n) { return slhdsa_sz(n).pk; }
+size_t crystals_ffi_slhdsa_sk_bytes(const char *n) { return slhdsa_sz(n).sk; }
+size_t crystals_ffi_slhdsa_sig_bytes(const char *n) {
+    if (!n) return 0;
+    try { return slhdsa_sig::sig_bytes(std::string(n)); } catch (...) { return 0; }
+}
+
+int crystals_ffi_slhdsa_keygen(const char *alg_name,
+                                uint8_t *pk_out, size_t pk_len,
+                                uint8_t *sk_out, size_t sk_len)
+{
+    if (!alg_name || !pk_out || !sk_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = slhdsa_sz(alg_name);
+        if (!sz.pk || pk_len < sz.pk || sk_len < sz.sk) return CRYSTALS_FFI_EARG;
+        auto keys = mcs::keygen_slhdsa(std::string(alg_name));
+        std::memcpy(pk_out, keys.pk.data(), keys.pk.size());
+        std::memcpy(sk_out, keys.sk.data(), keys.sk.size());
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_slhdsa_sign(const char *alg_name,
+                              const uint8_t *sk,      size_t sk_len,
+                              const uint8_t *msg,     size_t msg_len,
+                              uint8_t       *sig_out, size_t sig_len)
+{
+    if (!alg_name || !sk || !msg || !sig_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = slhdsa_sz(alg_name);
+        size_t expected_sig = slhdsa_sig::sig_bytes(std::string(alg_name));
+        if (!sz.sk || sk_len < sz.sk || sig_len < expected_sig) return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> sk_vec(sk, sk + sz.sk);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig;
+        slhdsa_sig::sign(std::string(alg_name), sk_vec, msg_vec, sig);
+        std::memcpy(sig_out, sig.data(), sig.size());
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_slhdsa_verify(const char *alg_name,
+                                const uint8_t *pk,  size_t pk_len,
+                                const uint8_t *msg, size_t msg_len,
+                                const uint8_t *sig, size_t sig_len)
+{
+    if (!alg_name || !pk || !msg || !sig) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = slhdsa_sz(alg_name);
+        size_t expected_sig = slhdsa_sig::sig_bytes(std::string(alg_name));
+        if (!sz.pk || pk_len < sz.pk || sig_len < expected_sig) return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk_vec(pk, pk + sz.pk);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig_vec(sig, sig + expected_sig);
+        bool ok = slhdsa_sig::verify(std::string(alg_name), pk_vec, msg_vec, sig_vec);
+        return ok ? CRYSTALS_FFI_OK : CRYSTALS_FFI_ECRYPTO;
     } catch (const std::invalid_argument&) {
         return CRYSTALS_FFI_EARG;
     } catch (...) {
