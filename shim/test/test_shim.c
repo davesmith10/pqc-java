@@ -54,9 +54,43 @@ static int test_kyber_keygen(void) {
     return 0;
 }
 
+static int test_kyber_roundtrip(int level) {
+    size_t pk_len = crystals_ffi_kyber_pk_bytes(level);
+    size_t sk_len = crystals_ffi_kyber_sk_bytes(level);
+    size_t ct_len = crystals_ffi_kyber_ct_bytes(level);
+
+    uint8_t pk[1568], sk[3168], ct[1568];
+    uint8_t ss_enc[32], ss_dec[32];
+
+    assert(crystals_ffi_kyber_keygen(level, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+
+    assert(crystals_ffi_kyber_encaps(level,
+                                      pk, pk_len,
+                                      ct, ct_len,
+                                      ss_enc, CRYSTALS_FFI_KYBER_SS_BYTES)
+           == CRYSTALS_FFI_OK);
+
+    assert(crystals_ffi_kyber_decaps(level,
+                                      sk, sk_len,
+                                      ct, ct_len,
+                                      ss_dec, CRYSTALS_FFI_KYBER_SS_BYTES)
+           == CRYSTALS_FFI_OK);
+
+    assert(memcmp(ss_enc, ss_dec, 32) == 0);  /* shared secrets must match */
+    return 0;
+}
+
+static int test_kyber_roundtrips(void) {
+    assert(test_kyber_roundtrip(512)  == 0);
+    assert(test_kyber_roundtrip(768)  == 0);
+    assert(test_kyber_roundtrip(1024) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
     RUN(kyber_keygen);
+    RUN(kyber_roundtrips);
     return tests_failed;
 }

@@ -29,6 +29,16 @@ int crystals_ffi_kyber_keygen(int level,
                                uint8_t *pk_out, size_t pk_len,
                                uint8_t *sk_out, size_t sk_len);
 
+int crystals_ffi_kyber_encaps(int level,
+                               const uint8_t *pk,     size_t pk_len,
+                               uint8_t       *ct_out, size_t ct_len,
+                               uint8_t       *ss_out, size_t ss_len);
+
+int crystals_ffi_kyber_decaps(int level,
+                               const uint8_t *sk,     size_t sk_len,
+                               const uint8_t *ct,     size_t ct_len,
+                               uint8_t       *ss_out, size_t ss_len);
+
 #ifdef __cplusplus
 }
 #endif
