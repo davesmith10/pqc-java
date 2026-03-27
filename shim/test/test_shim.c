@@ -120,11 +120,38 @@ static int test_dilithium_roundtrips(void) {
     return 0;
 }
 
+static int test_ec_kem_roundtrip(const char *alg,
+                                  size_t pk_len, size_t sk_len,
+                                  size_t ct_len, size_t ss_len) {
+    uint8_t pk[133], sk[66], ct[133], ss_enc[66], ss_dec[66];
+
+    assert(crystals_ffi_ec_kem_pk_bytes(alg) == pk_len);
+    assert(crystals_ffi_ec_kem_sk_bytes(alg) == sk_len);
+    assert(crystals_ffi_ec_kem_ct_bytes(alg) == ct_len);
+
+    assert(crystals_ffi_ec_kem_keygen(alg, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_ec_kem_encaps(alg, pk, pk_len,
+                                       ct, ct_len, ss_enc, ss_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_ec_kem_decaps(alg, sk, sk_len,
+                                       ct, ct_len, ss_dec, ss_len) == CRYSTALS_FFI_OK);
+    assert(memcmp(ss_enc, ss_dec, ss_len) == 0);
+    return 0;
+}
+
+static int test_ec_kem_roundtrips(void) {
+    assert(test_ec_kem_roundtrip("X25519",  32,  32, 32, 32) == 0);
+    assert(test_ec_kem_roundtrip("P-256",   65,  32, 65, 32) == 0);
+    assert(test_ec_kem_roundtrip("P-384",   97,  48, 97, 48) == 0);
+    assert(test_ec_kem_roundtrip("P-521",  133,  66, 133, 66) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
     RUN(kyber_keygen);
     RUN(kyber_roundtrips);
     RUN(dilithium_roundtrips);
+    RUN(ec_kem_roundtrips);
     return tests_failed;
 }

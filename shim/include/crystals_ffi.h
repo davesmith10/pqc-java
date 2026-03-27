@@ -54,6 +54,25 @@ int crystals_ffi_dilithium_verify(int mode,
                                    const uint8_t *msg, size_t msg_len,
                                    const uint8_t *sig, size_t sig_len);
 
+/* ── EC KEM (alg_name: "X25519" | "P-256" | "P-384" | "P-521") ── */
+size_t crystals_ffi_ec_kem_pk_bytes(const char *alg_name);
+size_t crystals_ffi_ec_kem_sk_bytes(const char *alg_name);
+size_t crystals_ffi_ec_kem_ct_bytes(const char *alg_name); /* ct = ephemeral pk */
+
+int crystals_ffi_ec_kem_keygen(const char *alg_name,
+                                uint8_t *pk_out, size_t pk_len,
+                                uint8_t *sk_out, size_t sk_len);
+
+int crystals_ffi_ec_kem_encaps(const char *alg_name,
+                                const uint8_t *pk,     size_t pk_len,
+                                uint8_t       *ct_out, size_t ct_len,
+                                uint8_t       *ss_out, size_t ss_len);
+
+int crystals_ffi_ec_kem_decaps(const char *alg_name,
+                                const uint8_t *sk,     size_t sk_len,
+                                const uint8_t *ct,     size_t ct_len,
+                                uint8_t       *ss_out, size_t ss_len);
+
 #ifdef __cplusplus
 }
 #endif
