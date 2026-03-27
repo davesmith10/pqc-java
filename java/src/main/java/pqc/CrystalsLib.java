@@ -131,5 +131,21 @@ final class CrystalsLib {
     static final MethodHandle SLHDSA_VERIFY = mh("crystals_ffi_slhdsa_verify",
         FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
 
+    // ── OQS KEM (ML-KEM + FrodoKEM) ──────────────────────────────────────────────
+    static final MethodHandle OQS_KEM_PK_BYTES = mh("crystals_ffi_oqs_kem_pk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_KEM_SK_BYTES = mh("crystals_ffi_oqs_kem_sk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_KEM_CT_BYTES = mh("crystals_ffi_oqs_kem_ct_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_KEM_SS_BYTES = mh("crystals_ffi_oqs_kem_ss_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle OQS_KEM_KEYGEN = mh("crystals_ffi_oqs_kem_keygen",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle OQS_KEM_ENCAPS = mh("crystals_ffi_oqs_kem_encaps",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle OQS_KEM_DECAPS = mh("crystals_ffi_oqs_kem_decaps",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+
     private CrystalsLib() {}
 }

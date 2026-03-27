@@ -262,6 +262,41 @@ static int test_slhdsa_roundtrips(void) {
     return 0;
 }
 
+static int test_oqs_kem_roundtrip(const char *alg,
+                                   size_t pk_len, size_t sk_len,
+                                   size_t ct_len, size_t ss_len) {
+    uint8_t *pk    = malloc(pk_len);
+    uint8_t *sk    = malloc(sk_len);
+    uint8_t *ct    = malloc(ct_len);
+    uint8_t *ss_e  = malloc(ss_len);
+    uint8_t *ss_d  = malloc(ss_len);
+
+    assert(crystals_ffi_oqs_kem_pk_bytes(alg) == pk_len);
+    assert(crystals_ffi_oqs_kem_sk_bytes(alg) == sk_len);
+    assert(crystals_ffi_oqs_kem_ct_bytes(alg) == ct_len);
+    assert(crystals_ffi_oqs_kem_ss_bytes(alg) == ss_len);
+
+    assert(crystals_ffi_oqs_kem_keygen(alg, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_oqs_kem_encaps(alg, pk, pk_len,
+                                        ct, ct_len, ss_e, ss_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_oqs_kem_decaps(alg, sk, sk_len,
+                                        ct, ct_len, ss_d, ss_len) == CRYSTALS_FFI_OK);
+    assert(memcmp(ss_e, ss_d, ss_len) == 0);
+
+    free(pk); free(sk); free(ct); free(ss_e); free(ss_d);
+    return 0;
+}
+
+static int test_oqs_kem_roundtrips(void) {
+    assert(test_oqs_kem_roundtrip("ML-KEM-512",         800,   1632,    768, 32) == 0);
+    assert(test_oqs_kem_roundtrip("ML-KEM-768",        1184,   2400,   1088, 32) == 0);
+    assert(test_oqs_kem_roundtrip("ML-KEM-1024",       1568,   3168,   1568, 32) == 0);
+    assert(test_oqs_kem_roundtrip("FrodoKEM-640-AES",  9616,  19888,   9752, 16) == 0);
+    assert(test_oqs_kem_roundtrip("FrodoKEM-976-AES", 15632,  31296,  15792, 24) == 0);
+    assert(test_oqs_kem_roundtrip("FrodoKEM-1344-AES",21520,  43088,  21696, 32) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
@@ -273,5 +308,6 @@ int main(void) {
     RUN(mceliece_sizes);
     RUN(mceliece_roundtrip);
     RUN(slhdsa_roundtrips);
+    RUN(oqs_kem_roundtrips);
     return tests_failed;
 }

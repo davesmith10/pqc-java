@@ -136,6 +136,28 @@ int crystals_ffi_slhdsa_verify(const char *alg_name,
                                 const uint8_t *msg, size_t msg_len,
                                 const uint8_t *sig, size_t sig_len);
 
+/* ── OQS KEM (alg_name: "ML-KEM-512" | "ML-KEM-768" | "ML-KEM-1024" |
+                         "FrodoKEM-640-AES" | "FrodoKEM-976-AES" |
+                         "FrodoKEM-1344-AES") ── */
+size_t crystals_ffi_oqs_kem_pk_bytes(const char *alg_name);
+size_t crystals_ffi_oqs_kem_sk_bytes(const char *alg_name);
+size_t crystals_ffi_oqs_kem_ct_bytes(const char *alg_name);
+size_t crystals_ffi_oqs_kem_ss_bytes(const char *alg_name);
+
+int crystals_ffi_oqs_kem_keygen(const char *alg_name,
+                                  uint8_t *pk_out, size_t pk_len,
+                                  uint8_t *sk_out, size_t sk_len);
+
+int crystals_ffi_oqs_kem_encaps(const char *alg_name,
+                                  const uint8_t *pk,     size_t pk_len,
+                                  uint8_t       *ct_out, size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len);
+
+int crystals_ffi_oqs_kem_decaps(const char *alg_name,
+                                  const uint8_t *sk,     size_t sk_len,
+                                  const uint8_t *ct,     size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len);
+
 #ifdef __cplusplus
 }
 #endif
