@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 17)
 find_package(Crystals REQUIRED HINTS /usr/local/lib/cmake/crystals)
 find_package(OpenSSL REQUIRED)
 
-add_library(crystals_ffi STATIC src/crystals_ffi.cpp)
+add_library(crystals_ffi SHARED src/crystals_ffi.cpp)
 target_include_directories(crystals_ffi PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
