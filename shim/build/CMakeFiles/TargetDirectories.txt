@@ -1,4 +1,0 @@
-/mnt/c/Users/daves/OneDrive/Desktop/Crystals/pqc-java/shim/build/CMakeFiles/crystals_ffi.dir
-/mnt/c/Users/daves/OneDrive/Desktop/Crystals/pqc-java/shim/build/CMakeFiles/test_shim.dir
-/mnt/c/Users/daves/OneDrive/Desktop/Crystals/pqc-java/shim/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/daves/OneDrive/Desktop/Crystals/pqc-java/shim/build/CMakeFiles/rebuild_cache.dir

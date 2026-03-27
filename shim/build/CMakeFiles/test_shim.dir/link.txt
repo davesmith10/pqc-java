@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/test_shim.dir/test/test_shim.c.o -o test_shim  -Wl,-rpath,/mnt/c/Users/daves/OneDrive/Desktop/Crystals/pqc-java/shim/build libcrystals_ffi.so 
