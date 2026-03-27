@@ -87,10 +87,44 @@ static int test_kyber_roundtrips(void) {
     return 0;
 }
 
+static int test_dilithium_roundtrip(int mode) {
+    size_t pk_len  = crystals_ffi_dilithium_pk_bytes(mode);
+    size_t sk_len  = crystals_ffi_dilithium_sk_bytes(mode);
+    size_t sig_max = crystals_ffi_dilithium_sig_bytes(mode);
+
+    uint8_t pk[2592], sk[4896], sig[4627];
+    const uint8_t msg[]     = "hello post-quantum world";
+    const uint8_t bad_msg[] = "hello post-quantum WORLD"; /* same length, different content */
+    size_t msg_len = sizeof(msg) - 1;
+
+    assert(crystals_ffi_dilithium_keygen(mode, pk, pk_len, sk, sk_len)
+           == CRYSTALS_FFI_OK);
+
+    assert(crystals_ffi_dilithium_sign(mode, sk, sk_len, msg, msg_len, sig, sig_max)
+           == CRYSTALS_FFI_OK);
+
+    /* valid sig → OK */
+    assert(crystals_ffi_dilithium_verify(mode, pk, pk_len, msg, msg_len, sig, sig_max)
+           == CRYSTALS_FFI_OK);
+
+    /* tampered message → ECRYPTO */
+    assert(crystals_ffi_dilithium_verify(mode, pk, pk_len, bad_msg, msg_len, sig, sig_max)
+           == CRYSTALS_FFI_ECRYPTO);
+    return 0;
+}
+
+static int test_dilithium_roundtrips(void) {
+    assert(test_dilithium_roundtrip(2) == 0);
+    assert(test_dilithium_roundtrip(3) == 0);
+    assert(test_dilithium_roundtrip(5) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
     RUN(kyber_keygen);
     RUN(kyber_roundtrips);
+    RUN(dilithium_roundtrips);
     return tests_failed;
 }

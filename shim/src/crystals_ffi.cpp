@@ -91,4 +91,72 @@ int crystals_ffi_kyber_decaps(int level,
     }
 }
 
+int crystals_ffi_dilithium_keygen(int mode,
+                                   uint8_t *pk_out, size_t pk_len,
+                                   uint8_t *sk_out, size_t sk_len)
+{
+    if (!pk_out || !sk_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto szs = dilithium_sizes(mode);           // throws std::invalid_argument on bad mode
+        if (pk_len < szs.pk_bytes || sk_len < szs.sk_bytes)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk, sk;
+        dilithium::keygen(mode, pk, sk);
+        std::memcpy(pk_out, pk.data(), szs.pk_bytes);
+        std::memcpy(sk_out, sk.data(), szs.sk_bytes);
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_dilithium_sign(int mode,
+                                 const uint8_t *sk,      size_t sk_len,
+                                 const uint8_t *msg,     size_t msg_len,
+                                 uint8_t       *sig_out, size_t sig_len)
+{
+    if (!sk || !msg || !sig_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto szs      = dilithium_sizes(mode);
+        size_t sig_sz = dilithium_sig::sig_bytes_for_mode(mode);
+        if (sk_len < szs.sk_bytes || sig_len < sig_sz)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> sk_vec(sk,  sk  + szs.sk_bytes);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig;
+        dilithium_sig::sign(mode, sk_vec, msg_vec, sig);
+        std::memcpy(sig_out, sig.data(), sig.size());
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_dilithium_verify(int mode,
+                                   const uint8_t *pk,  size_t pk_len,
+                                   const uint8_t *msg, size_t msg_len,
+                                   const uint8_t *sig, size_t sig_len)
+{
+    if (!pk || !msg || !sig) return CRYSTALS_FFI_EARG;
+    try {
+        auto szs      = dilithium_sizes(mode);
+        size_t sig_sz = dilithium_sig::sig_bytes_for_mode(mode);
+        if (pk_len < szs.pk_bytes || sig_len < sig_sz)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk_vec(pk,  pk  + szs.pk_bytes);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig_vec(sig, sig + sig_sz);
+        bool ok = dilithium_sig::verify(mode, pk_vec, msg_vec, sig_vec);
+        return ok ? CRYSTALS_FFI_OK : CRYSTALS_FFI_ECRYPTO;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
 } // extern "C"
