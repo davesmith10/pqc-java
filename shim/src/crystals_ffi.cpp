@@ -35,6 +35,37 @@ static size_t ec_kem_sk_sz(const char *n) {
     return 0;
 }
 
+// Helper: map sig alg name to ec::Algorithm
+static ec::Algorithm sig_alg(const char *name) {
+    if (!name) throw std::invalid_argument("null alg_name");
+    std::string s(name);
+    if (s == "Ed25519")     return ec::Algorithm::Ed25519;
+    if (s == "ECDSA P-256") return ec::Algorithm::P256;
+    if (s == "ECDSA P-384") return ec::Algorithm::P384;
+    if (s == "ECDSA P-521") return ec::Algorithm::P521;
+    throw std::invalid_argument("unknown EC sig alg: " + s);
+}
+
+static size_t ec_sig_pk_sz(const char *n) {
+    if (!n) return 0;
+    std::string s(n);
+    if (s=="Ed25519")     return 32;
+    if (s=="ECDSA P-256") return 65;
+    if (s=="ECDSA P-384") return 97;
+    if (s=="ECDSA P-521") return 133;
+    return 0;
+}
+
+static size_t ec_sig_sk_sz(const char *n) {
+    if (!n) return 0;
+    std::string s(n);
+    if (s=="Ed25519")     return 32;
+    if (s=="ECDSA P-256") return 32;
+    if (s=="ECDSA P-384") return 48;
+    if (s=="ECDSA P-521") return 66;
+    return 0;
+}
+
 extern "C" {
 
 size_t crystals_ffi_kyber_pk_bytes(int level) {
@@ -256,6 +287,82 @@ int crystals_ffi_ec_kem_decaps(const char *alg_name,
         ec_kem::decaps(alg_name, sk_vec, ct_vec, ss);
         std::memcpy(ss_out, ss.data(), ss.size());
         return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+size_t crystals_ffi_ec_sig_pk_bytes(const char *n) { return ec_sig_pk_sz(n); }
+size_t crystals_ffi_ec_sig_sk_bytes(const char *n) { return ec_sig_sk_sz(n); }
+size_t crystals_ffi_ec_sig_bytes(const char *n) {
+    try { return n ? ec_sig::sig_bytes(std::string(n)) : 0; }
+    catch (...) { return 0; }
+}
+
+int crystals_ffi_ec_sig_keygen(const char *alg_name,
+                                uint8_t *pk_out, size_t pk_len,
+                                uint8_t *sk_out, size_t sk_len)
+{
+    if (!alg_name || !pk_out || !sk_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto alg = sig_alg(alg_name);
+        if (pk_len < ec_sig_pk_sz(alg_name) || sk_len < ec_sig_sk_sz(alg_name))
+            return CRYSTALS_FFI_EARG;
+        auto kp = ec::keygen(alg);
+        std::memcpy(pk_out, kp.pk.data(), kp.pk.size());
+        std::memcpy(sk_out, kp.sk.data(), kp.sk.size());
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_ec_sig_sign(const char *alg_name,
+                              const uint8_t *sk,      size_t sk_len,
+                              const uint8_t *msg,     size_t msg_len,
+                              uint8_t       *sig_out, size_t sig_len)
+{
+    if (!alg_name || !sk || !msg || !sig_out) return CRYSTALS_FFI_EARG;
+    try {
+        std::string alg(alg_name);
+        size_t expected_sk  = ec_sig_sk_sz(alg_name);
+        size_t expected_sig = ec_sig::sig_bytes(alg);
+        if (!expected_sk || !expected_sig) return CRYSTALS_FFI_EARG;
+        if (sk_len < expected_sk || sig_len < expected_sig) return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> sk_vec(sk,  sk  + expected_sk);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig;
+        ec_sig::sign(alg, sk_vec, msg_vec, sig);
+        std::memcpy(sig_out, sig.data(), sig.size());
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_ec_sig_verify(const char *alg_name,
+                                const uint8_t *pk,  size_t pk_len,
+                                const uint8_t *msg, size_t msg_len,
+                                const uint8_t *sig, size_t sig_len)
+{
+    if (!alg_name || !pk || !msg || !sig) return CRYSTALS_FFI_EARG;
+    try {
+        std::string alg(alg_name);
+        size_t expected_pk  = ec_sig_pk_sz(alg_name);
+        size_t expected_sig = ec_sig::sig_bytes(alg);
+        if (!expected_pk || !expected_sig) return CRYSTALS_FFI_EARG;
+        if (pk_len < expected_pk || sig_len < expected_sig) return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk_vec(pk,  pk  + expected_pk);
+        std::vector<uint8_t> msg_vec(msg, msg + msg_len);
+        std::vector<uint8_t> sig_vec(sig, sig + expected_sig);
+        bool ok = ec_sig::verify(alg, pk_vec, msg_vec, sig_vec);
+        return ok ? CRYSTALS_FFI_OK : CRYSTALS_FFI_ECRYPTO;
     } catch (const std::invalid_argument&) {
         return CRYSTALS_FFI_EARG;
     } catch (...) {

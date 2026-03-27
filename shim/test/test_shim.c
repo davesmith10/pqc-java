@@ -146,6 +146,37 @@ static int test_ec_kem_roundtrips(void) {
     return 0;
 }
 
+static int test_ec_sig_roundtrip(const char *alg,
+                                  size_t pk_len, size_t sk_len, size_t sig_len) {
+    uint8_t pk[133], sk[66], sig[132];
+    const uint8_t msg[]     = "sign this message";
+    const uint8_t bad_msg[] = "sign THIS message";
+    size_t msg_len = sizeof(msg) - 1;
+
+    assert(crystals_ffi_ec_sig_pk_bytes(alg) == pk_len);
+    assert(crystals_ffi_ec_sig_sk_bytes(alg) == sk_len);
+    assert(crystals_ffi_ec_sig_bytes(alg)    == sig_len);
+
+    assert(crystals_ffi_ec_sig_keygen(alg, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_ec_sig_sign(alg, sk, sk_len, msg, msg_len,
+                                     sig, sig_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_ec_sig_verify(alg, pk, pk_len, msg, msg_len,
+                                       sig, sig_len) == CRYSTALS_FFI_OK);
+
+    /* tampered message → ECRYPTO */
+    assert(crystals_ffi_ec_sig_verify(alg, pk, pk_len, bad_msg, msg_len,
+                                       sig, sig_len) == CRYSTALS_FFI_ECRYPTO);
+    return 0;
+}
+
+static int test_ec_sig_roundtrips(void) {
+    assert(test_ec_sig_roundtrip("Ed25519",     32, 32, 64)  == 0);
+    assert(test_ec_sig_roundtrip("ECDSA P-256", 65, 32, 64)  == 0);
+    assert(test_ec_sig_roundtrip("ECDSA P-384", 97, 48, 96)  == 0);
+    assert(test_ec_sig_roundtrip("ECDSA P-521", 133,66, 132) == 0);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
@@ -153,5 +184,6 @@ int main(void) {
     RUN(kyber_roundtrips);
     RUN(dilithium_roundtrips);
     RUN(ec_kem_roundtrips);
+    RUN(ec_sig_roundtrips);
     return tests_failed;
 }
