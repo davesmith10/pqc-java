@@ -39,8 +39,24 @@ static int test_dilithium_sizes(void) {
     return 0;
 }
 
+static int test_kyber_keygen(void) {
+    uint8_t pk[1568], sk[3168]; /* max sizes (level 1024) */
+
+    assert(crystals_ffi_kyber_keygen(512,  pk, 800,  sk, 1632) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_kyber_keygen(768,  pk, 1184, sk, 2400) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_kyber_keygen(1024, pk, 1568, sk, 3168) == CRYSTALS_FFI_OK);
+
+    /* invalid level → EARG */
+    assert(crystals_ffi_kyber_keygen(999, pk, 800, sk, 1632) == CRYSTALS_FFI_EARG);
+
+    /* buffer too small → EARG */
+    assert(crystals_ffi_kyber_keygen(512, pk, 10, sk, 1632) == CRYSTALS_FFI_EARG);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
+    RUN(kyber_keygen);
     return tests_failed;
 }

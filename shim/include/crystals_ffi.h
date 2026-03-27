@@ -24,6 +24,11 @@ size_t crystals_ffi_dilithium_pk_bytes(int mode);
 size_t crystals_ffi_dilithium_sk_bytes(int mode);
 size_t crystals_ffi_dilithium_sig_bytes(int mode);
 
+/* ── Kyber KEM ─────────────────────────────────────────── */
+int crystals_ffi_kyber_keygen(int level,
+                               uint8_t *pk_out, size_t pk_len,
+                               uint8_t *sk_out, size_t sk_len);
+
 #ifdef __cplusplus
 }
 #endif

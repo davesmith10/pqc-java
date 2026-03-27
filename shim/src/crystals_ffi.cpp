@@ -24,4 +24,25 @@ size_t crystals_ffi_dilithium_sig_bytes(int mode) {
     try { return dilithium_sig::sig_bytes_for_mode(mode); } catch (...) { return 0; }
 }
 
+int crystals_ffi_kyber_keygen(int level,
+                               uint8_t *pk_out, size_t pk_len,
+                               uint8_t *sk_out, size_t sk_len)
+{
+    if (!pk_out || !sk_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto szs = kyber_kem_sizes(level);          // throws std::invalid_argument on bad level
+        if (pk_len < szs.pk_bytes || sk_len < szs.sk_bytes)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk, sk;
+        kyber::keygen(level, pk, sk);
+        std::memcpy(pk_out, pk.data(), szs.pk_bytes);
+        std::memcpy(sk_out, sk.data(), szs.sk_bytes);
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
 } // extern "C"
