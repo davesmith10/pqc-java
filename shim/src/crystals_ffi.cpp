@@ -66,6 +66,18 @@ static size_t ec_sig_sk_sz(const char *n) {
     return 0;
 }
 
+struct McElieceSizes { size_t pk, sk, ct; };
+static McElieceSizes mceliece_sz(const char *ps) {
+    if (!ps) return {0,0,0};
+    std::string s(ps);
+    if (s=="mceliece348864f")  return { 261120,  6492,  96};
+    if (s=="mceliece460896f")  return { 524160, 13608, 156};
+    if (s=="mceliece6688128f") return {1044992, 13932, 208};
+    if (s=="mceliece6960119f") return {1047319, 13948, 194};
+    if (s=="mceliece8192128f") return {1357824, 14120, 208};
+    return {0,0,0};
+}
+
 extern "C" {
 
 size_t crystals_ffi_kyber_pk_bytes(int level) {
@@ -363,6 +375,72 @@ int crystals_ffi_ec_sig_verify(const char *alg_name,
         std::vector<uint8_t> sig_vec(sig, sig + expected_sig);
         bool ok = ec_sig::verify(alg, pk_vec, msg_vec, sig_vec);
         return ok ? CRYSTALS_FFI_OK : CRYSTALS_FFI_ECRYPTO;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+size_t crystals_ffi_mceliece_pk_bytes(const char *ps) { return mceliece_sz(ps).pk; }
+size_t crystals_ffi_mceliece_sk_bytes(const char *ps) { return mceliece_sz(ps).sk; }
+size_t crystals_ffi_mceliece_ct_bytes(const char *ps) { return mceliece_sz(ps).ct; }
+
+int crystals_ffi_mceliece_keygen(const char *param_set,
+                                  uint8_t *pk_out, size_t pk_len,
+                                  uint8_t *sk_out, size_t sk_len)
+{
+    if (!param_set || !pk_out || !sk_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = mceliece_sz(param_set);
+        if (!sz.pk || pk_len < sz.pk || sk_len < sz.sk) return CRYSTALS_FFI_EARG;
+        auto keys = mcs::keygen_mceliece(std::string(param_set));
+        std::memcpy(pk_out, keys.pk.data(), sz.pk);
+        std::memcpy(sk_out, keys.sk.data(), sz.sk);
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_mceliece_encaps(const char *param_set,
+                                  const uint8_t *pk,     size_t pk_len,
+                                  uint8_t       *ct_out, size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len)
+{
+    if (!param_set || !pk || !ct_out || !ss_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = mceliece_sz(param_set);
+        if (!sz.pk || pk_len < sz.pk || ct_len < sz.ct || ss_len < 32)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> pk_vec(pk, pk + sz.pk), ct, ss;
+        mceliece_kem::encaps(std::string(param_set), pk_vec, ct, ss);
+        std::memcpy(ct_out, ct.data(), sz.ct);
+        std::memcpy(ss_out, ss.data(), 32);
+        return CRYSTALS_FFI_OK;
+    } catch (const std::invalid_argument&) {
+        return CRYSTALS_FFI_EARG;
+    } catch (...) {
+        return CRYSTALS_FFI_EUNKNOWN;
+    }
+}
+
+int crystals_ffi_mceliece_decaps(const char *param_set,
+                                  const uint8_t *sk,     size_t sk_len,
+                                  const uint8_t *ct,     size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len)
+{
+    if (!param_set || !sk || !ct || !ss_out) return CRYSTALS_FFI_EARG;
+    try {
+        auto sz = mceliece_sz(param_set);
+        if (!sz.sk || sk_len < sz.sk || ct_len < sz.ct || ss_len < 32)
+            return CRYSTALS_FFI_EARG;
+        std::vector<uint8_t> sk_vec(sk, sk + sz.sk), ct_vec(ct, ct + sz.ct), ss;
+        mceliece_kem::decaps(std::string(param_set), sk_vec, ct_vec, ss);
+        std::memcpy(ss_out, ss.data(), 32);
+        return CRYSTALS_FFI_OK;
     } catch (const std::invalid_argument&) {
         return CRYSTALS_FFI_EARG;
     } catch (...) {

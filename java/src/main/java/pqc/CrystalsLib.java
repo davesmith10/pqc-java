@@ -102,5 +102,20 @@ final class CrystalsLib {
     static final MethodHandle EC_SIG_VERIFY = mh("crystals_ffi_ec_sig_verify",
         FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
 
+    // ── McEliece KEM ──────────────────────────────────────────────────────────────
+    static final int MCELIECE_SS_BYTES = 32;
+    static final MethodHandle MCELIECE_PK_BYTES = mh("crystals_ffi_mceliece_pk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle MCELIECE_SK_BYTES = mh("crystals_ffi_mceliece_sk_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle MCELIECE_CT_BYTES = mh("crystals_ffi_mceliece_ct_bytes",
+        FunctionDescriptor.of(LONG, ADDR));
+    static final MethodHandle MCELIECE_KEYGEN = mh("crystals_ffi_mceliece_keygen",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle MCELIECE_ENCAPS = mh("crystals_ffi_mceliece_encaps",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+    static final MethodHandle MCELIECE_DECAPS = mh("crystals_ffi_mceliece_decaps",
+        FunctionDescriptor.of(INT, ADDR, ADDR, LONG, ADDR, LONG, ADDR, LONG));
+
     private CrystalsLib() {}
 }

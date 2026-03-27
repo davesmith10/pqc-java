@@ -92,6 +92,29 @@ int crystals_ffi_ec_sig_verify(const char *alg_name,
                                 const uint8_t *msg, size_t msg_len,
                                 const uint8_t *sig, size_t sig_len);
 
+#define CRYSTALS_FFI_MCELIECE_SS_BYTES 32
+
+/* ── McEliece KEM (param_set: "mceliece348864f" | "mceliece460896f" |
+                              "mceliece6688128f" | "mceliece6960119f" |
+                              "mceliece8192128f") ── */
+size_t crystals_ffi_mceliece_pk_bytes(const char *param_set);
+size_t crystals_ffi_mceliece_sk_bytes(const char *param_set);
+size_t crystals_ffi_mceliece_ct_bytes(const char *param_set);
+
+int crystals_ffi_mceliece_keygen(const char *param_set,
+                                  uint8_t *pk_out, size_t pk_len,
+                                  uint8_t *sk_out, size_t sk_len);
+
+int crystals_ffi_mceliece_encaps(const char *param_set,
+                                  const uint8_t *pk,     size_t pk_len,
+                                  uint8_t       *ct_out, size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len);
+
+int crystals_ffi_mceliece_decaps(const char *param_set,
+                                  const uint8_t *sk,     size_t sk_len,
+                                  const uint8_t *ct,     size_t ct_len,
+                                  uint8_t       *ss_out, size_t ss_len);
+
 #ifdef __cplusplus
 }
 #endif

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 #include "crystals_ffi.h"
 
 static int tests_failed = 0;
@@ -177,6 +178,56 @@ static int test_ec_sig_roundtrips(void) {
     return 0;
 }
 
+static int test_mceliece_sizes(void) {
+    assert(crystals_ffi_mceliece_pk_bytes("mceliece348864f")  ==   261120);
+    assert(crystals_ffi_mceliece_pk_bytes("mceliece460896f")  ==   524160);
+    assert(crystals_ffi_mceliece_pk_bytes("mceliece6688128f") ==  1044992);
+    assert(crystals_ffi_mceliece_pk_bytes("mceliece6960119f") ==  1047319);
+    assert(crystals_ffi_mceliece_pk_bytes("mceliece8192128f") ==  1357824);
+
+    assert(crystals_ffi_mceliece_sk_bytes("mceliece348864f")  ==     6492);
+    assert(crystals_ffi_mceliece_sk_bytes("mceliece460896f")  ==    13608);
+    assert(crystals_ffi_mceliece_sk_bytes("mceliece6688128f") ==    13932);
+    assert(crystals_ffi_mceliece_sk_bytes("mceliece6960119f") ==    13948);
+    assert(crystals_ffi_mceliece_sk_bytes("mceliece8192128f") ==    14120);
+
+    assert(crystals_ffi_mceliece_ct_bytes("mceliece348864f")  ==       96);
+    assert(crystals_ffi_mceliece_ct_bytes("mceliece460896f")  ==      156);
+    assert(crystals_ffi_mceliece_ct_bytes("mceliece6688128f") ==      208);
+    assert(crystals_ffi_mceliece_ct_bytes("mceliece6960119f") ==      194);
+    assert(crystals_ffi_mceliece_ct_bytes("mceliece8192128f") ==      208);
+
+    assert(CRYSTALS_FFI_MCELIECE_SS_BYTES == 32);
+
+    assert(crystals_ffi_mceliece_pk_bytes("bad") == 0);
+    assert(crystals_ffi_mceliece_sk_bytes(NULL)  == 0);
+    return 0;
+}
+
+/* Roundtrip only the smallest variant — larger ones take too long for a unit test */
+static int test_mceliece_roundtrip(void) {
+    const char *ps = "mceliece348864f";
+    size_t pk_len = crystals_ffi_mceliece_pk_bytes(ps);
+    size_t sk_len = crystals_ffi_mceliece_sk_bytes(ps);
+    size_t ct_len = crystals_ffi_mceliece_ct_bytes(ps);
+    size_t ss_len = CRYSTALS_FFI_MCELIECE_SS_BYTES;
+
+    uint8_t *pk = malloc(pk_len);
+    uint8_t *sk = malloc(sk_len);
+    uint8_t *ct = malloc(ct_len);
+    uint8_t ss_enc[32], ss_dec[32];
+
+    assert(crystals_ffi_mceliece_keygen(ps, pk, pk_len, sk, sk_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_mceliece_encaps(ps, pk, pk_len, ct, ct_len,
+                                         ss_enc, ss_len) == CRYSTALS_FFI_OK);
+    assert(crystals_ffi_mceliece_decaps(ps, sk, sk_len, ct, ct_len,
+                                         ss_dec, ss_len) == CRYSTALS_FFI_OK);
+    assert(memcmp(ss_enc, ss_dec, ss_len) == 0);
+
+    free(pk); free(sk); free(ct);
+    return 0;
+}
+
 int main(void) {
     RUN(kyber_sizes);
     RUN(dilithium_sizes);
@@ -185,5 +236,7 @@ int main(void) {
     RUN(dilithium_roundtrips);
     RUN(ec_kem_roundtrips);
     RUN(ec_sig_roundtrips);
+    RUN(mceliece_sizes);
+    RUN(mceliece_roundtrip);
     return tests_failed;
 }
