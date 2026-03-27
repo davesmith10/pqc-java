@@ -73,17 +73,29 @@ public final class KyberKEM {
 
     public static int pkBytes(int level) {
         try {
-            return (int)(long) CrystalsLib.KYBER_PK_BYTES.invokeExact(level);
+            int v = (int)(long) CrystalsLib.KYBER_PK_BYTES.invokeExact(level);
+            if (v == 0) throw new IllegalArgumentException("kyber_pk_bytes: unknown level " + level);
+            return v;
+        } catch (RuntimeException | Error e) {
+            throw e;
         } catch (Throwable t) { throw new CrystalsException("kyber_pk_bytes", t); }
     }
     public static int skBytes(int level) {
         try {
-            return (int)(long) CrystalsLib.KYBER_SK_BYTES.invokeExact(level);
+            int v = (int)(long) CrystalsLib.KYBER_SK_BYTES.invokeExact(level);
+            if (v == 0) throw new IllegalArgumentException("kyber_sk_bytes: unknown level " + level);
+            return v;
+        } catch (RuntimeException | Error e) {
+            throw e;
         } catch (Throwable t) { throw new CrystalsException("kyber_sk_bytes", t); }
     }
     public static int ctBytes(int level) {
         try {
-            return (int)(long) CrystalsLib.KYBER_CT_BYTES.invokeExact(level);
+            int v = (int)(long) CrystalsLib.KYBER_CT_BYTES.invokeExact(level);
+            if (v == 0) throw new IllegalArgumentException("kyber_ct_bytes: unknown level " + level);
+            return v;
+        } catch (RuntimeException | Error e) {
+            throw e;
         } catch (Throwable t) { throw new CrystalsException("kyber_ct_bytes", t); }
     }
 
