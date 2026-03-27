@@ -1,1 +1,46 @@
-int main(void) { return 0; }
+#include <stdio.h>
+#include <stdint.h>
+#include <assert.h>
+#include <string.h>
+#include "crystals_ffi.h"
+
+static int tests_failed = 0;
+
+#define RUN(name) \
+    do { int _r = test_##name(); \
+         if (_r) { printf("FAIL: " #name "\n"); tests_failed++; } \
+         else    { printf("PASS: " #name "\n"); } \
+    } while (0)
+
+static int test_kyber_sizes(void) {
+    assert(crystals_ffi_kyber_pk_bytes(512)  == 800);
+    assert(crystals_ffi_kyber_pk_bytes(768)  == 1184);
+    assert(crystals_ffi_kyber_pk_bytes(1024) == 1568);
+    assert(crystals_ffi_kyber_sk_bytes(512)  == 1632);
+    assert(crystals_ffi_kyber_sk_bytes(768)  == 2400);
+    assert(crystals_ffi_kyber_sk_bytes(1024) == 3168);
+    assert(crystals_ffi_kyber_ct_bytes(512)  == 768);
+    assert(crystals_ffi_kyber_ct_bytes(768)  == 1088);
+    assert(crystals_ffi_kyber_ct_bytes(1024) == 1568);
+    assert(CRYSTALS_FFI_KYBER_SS_BYTES == 32);
+    return 0;
+}
+
+static int test_dilithium_sizes(void) {
+    assert(crystals_ffi_dilithium_pk_bytes(2) == 1312);
+    assert(crystals_ffi_dilithium_pk_bytes(3) == 1952);
+    assert(crystals_ffi_dilithium_pk_bytes(5) == 2592);
+    assert(crystals_ffi_dilithium_sk_bytes(2) == 2560);
+    assert(crystals_ffi_dilithium_sk_bytes(3) == 4032);
+    assert(crystals_ffi_dilithium_sk_bytes(5) == 4896);
+    assert(crystals_ffi_dilithium_sig_bytes(2) == 2420);
+    assert(crystals_ffi_dilithium_sig_bytes(3) == 3309);
+    assert(crystals_ffi_dilithium_sig_bytes(5) == 4627);
+    return 0;
+}
+
+int main(void) {
+    RUN(kyber_sizes);
+    RUN(dilithium_sizes);
+    return tests_failed;
+}
